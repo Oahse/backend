@@ -12,12 +12,6 @@ CURRENCIES = [("USD","USD"),("EUR","EUR"),("NGN","NGN"),("GBP","GBP"),
 DELIVERYSTATUSES = ['shipped', 'processing', 'out for delivery', 'delivered', 'pending', 'canceled', 'returned']
 DATETIMEFORMAT = '%Y-%m-%d %H:%M:%S'
 
-def get_profile_image_filepath(self, filename):
-    return f'profile_images/{self.pk}/{'profile_image.png'}'
-
-def get_default_profile_image():
-    return 'user.png'
-
 def parsedatetoint(datefield):
     return int(datefield.strftime(DATETIMEFORMAT))
 
