@@ -136,6 +136,22 @@ class User(AbstractBaseUser, PermissionsMixin):
     updatedAt = models.CharField(max_length=200, null=True, blank=False )
     last_login = models.DateTimeField(auto_now=True)
     last_login_location = models.JSONField(null=True, blank=True)
+    # Add related_name to avoid clashes with Django's auth.User model
+    groups = models.ManyToManyField(
+        'auth.Group',
+        related_name='api_user_set',  # Avoid clashes with auth.User.groups
+        blank=True,
+        help_text='The groups this user belongs to.',
+        verbose_name='groups',
+    )
+
+    user_permissions = models.ManyToManyField(
+        'auth.Permission',
+        related_name='api_user_set',  # Avoid clashes with auth.User.user_permissions
+        blank=True,
+        help_text='Specific permissions for this user.',
+        verbose_name='user permissions',
+    )
 
     objects = CustomUserManager()
 
