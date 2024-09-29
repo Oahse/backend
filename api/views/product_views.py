@@ -1,5 +1,11 @@
-from rest_framework import viewsets, serializers, status
+from rest_framework import viewsets, status
 from rest_framework.response import Response
+from django.db.models import Q
+from django.db.models.functions import Lower
+from django.db.models.functions import Cast
+from django.db.models import TextField
+from django.db import connection
+from collections import defaultdict
 from ..models import Product
 from ..serializers import ProductSerializer
 
@@ -62,22 +68,84 @@ class ProductViewSet(viewsets.ModelViewSet):
         }
         return Response(response_data, status=status.HTTP_204_NO_CONTENT)
 
+
+    def filter_products(self, request, queryset):
+        # Get parameters from the request body
+        search_query = request.data.get('search', None)
+        price_range = request.data.get('price_range', None)  # Expecting 'min,max'
+        category_id = request.data.get('category', None)
+        start_date = request.data.get('start_date', None)
+        end_date = request.data.get('end_date', None)
+
+        queryset = Product.objects.all()
+
+        # Search by name or description
+        if search_query:
+            # Handle JSON search compatibility
+            if connection.vendor == 'postgresql':
+                queryset = queryset.filter(
+                    Q(name__icontains=search_query) | 
+                    Q(description__icontains=search_query) |
+                    Q(address__icontains=search_query)| 
+                    Q(hashtags__contains=[search_query])
+                )
+            else:
+                queryset = queryset.annotate(
+                    hashtags_text=Cast('hashtags', TextField()),
+                    lower_name=Lower('name'),
+                    lower_description=Lower('description'),
+                    lower_address=Lower('address')
+                ).filter(
+                    Q(lower_name__icontains=search_query) | 
+                    Q(lower_description__icontains=search_query) |
+                    Q(lower_address__icontains=search_query)| 
+                    Q(hashtags_text__icontains=search_query)
+                )
+
+        # Filter by price range
+        if price_range:
+            min_price, max_price = map(float, price_range.split(','))
+            queryset = queryset.filter(price__gte=min_price, price__lte=max_price)
+
+        # Filter by category
+        if category_id:
+            queryset = queryset.filter(category__id=category_id)
+
+        # Filter by date range
+        if start_date and end_date:
+            queryset = queryset.filter(createdat__range=[start_date, end_date])
+
+        return queryset
+
     def list(self, request, *args, **kwargs):
         queryset = self.filter_queryset(self.get_queryset())
-        page = self.paginate_queryset(queryset)
-        if page is not None:
-            serializer = self.get_serializer(page, many=True)
-            response_data = {
-                'success': True,
-                'message': 'Products retrieved successfully',
-                'data': serializer.data
-            }
-            return self.get_paginated_response(response_data)
+        
+        # Grouping products by category
+        grouped_data = defaultdict(list)
 
-        serializer = self.get_serializer(queryset, many=True)
-        response_data = {
+        for product in self.filter_products(request, queryset):
+            category_name = product.category.name if product.category else "Uncategorized"
+            grouped_data[category_name].append(product)
+
+        # Transform the data into the desired output format
+        response_data = []
+
+        for category, items in grouped_data.items():
+            # Collect all unique hashtags for this category
+            hashtags = set()
+            for item in items:
+                hashtags.update(item.hashtags)
+
+            # Append the data in the desired format
+            response_data.append({
+                'category': category,
+                'sections': list(hashtags),  # Convert set of hashtags to a list
+                'items': [ProductSerializer(item).data for item in items]
+            })
+
+        # Return the response
+        return Response({
             'success': True,
             'message': 'Products retrieved successfully',
-            'data': serializer.data
-        }
-        return Response(response_data)
+            'data': response_data
+        })

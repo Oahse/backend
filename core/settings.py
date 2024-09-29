@@ -101,16 +101,20 @@ WSGI_APPLICATION = 'core.wsgi.application'
 # }
 
 
-DATABASES = {
-    'default': dj_database_url.config(default='postgres://localhost:5432/mydb')
-}
+# Get the environment variable for the current environment
+ENVIRONMENT = os.getenv('DJANGO_ENV', 'local')  # Default to 'local' if not set
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': BASE_DIR / 'db.sqlite3',
-#     }
-# }
+if ENVIRONMENT == 'production':
+    DATABASES = {
+        'default': dj_database_url.config(default='postgres://user:password@localhost:5432/mydb')
+    }
+else:
+    DATABASES = {
+        'default': {
+            'ENGINE': 'django.db.backends.sqlite3',
+            'NAME': BASE_DIR / 'db.sqlite3',
+        }
+    }
 
 
 # Password validation

@@ -331,9 +331,13 @@ class Product(models.Model):
     deletedat = models.CharField(max_length=200, null=True, blank=True)
     deleted = models.BooleanField(default=False)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
-    businessid = models.CharField(max_length=200, null=True, blank=True)
+    business = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)
     address = models.CharField(max_length=200, null=True, blank=True)
     location = models.JSONField(null=True, blank=True)#{lat,long}
+    hashtags = models.JSONField(default=list, blank=True)  # Can store as a list of strings
+
+    def __str__(self):
+        return self.name or "Unnamed Product"
 
 class Message(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)

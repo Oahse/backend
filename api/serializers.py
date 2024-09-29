@@ -183,73 +183,99 @@ class CategorySerializer(serializers.ModelSerializer):
         model = Category
         fields = ['id', 'name', 'icon']
 
-class ProductSerializer(serializers.ModelSerializer):
-    files = serializers.JSONField(required=False, allow_null=True)
-    location = serializers.JSONField(required=False, allow_null=True)
-    
+class ProductBusinessSerializer(UserSerializer):
     """
-    Serializer for the Product model.
+    Serializer for business.
     """
     class Meta:
+        model = UserSerializer.Meta.model
+        fields = ('id', 'image', 'businessname', 'websiteurl')
+
+class ProductBusinessSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = User
+        fields = ['id', 'image', 'businessname', 'websiteurl']
+
+class ProductSerializer(serializers.ModelSerializer):
+    business = ProductBusinessSerializer(read_only=True)  # Read-only representation of the business
+    files = serializers.JSONField(required=False, allow_null=True)
+    location = serializers.JSONField(required=False, allow_null=True)
+
+    class Meta:
         model = Product
-        fields = '__all__'
+        fields = [
+            'id', 'name', 'image', 'description', 'price', 'currency', 
+            'files', 'createdat', 'updatedat', 'deletedat', 'deleted', 
+            'category', 'address', 'location', 'hashtags', 'business'
+        ]
 
     def create(self, validated_data):
-        files_data = validated_data.pop('files')
+        # Extract and validate 'files'
+        files_data = validated_data.pop('files', None)
         if files_data:
             for file in files_data:
-                # Ensure the item has all the required fields
                 if not all(k in file for k in ('name', 'desc', 'date', 'url')):
-                    raise serializers.ValidationError("Each item must contain; 'name', 'desc', 'date', 'url'.")
-        
-        locations_data = validated_data.pop('location')
-        if locations_data:
-            for loc in locations_data:
-                # Ensure the item has all the required fields
-                if not loc in ('lat', 'long'):
-                    raise serializers.ValidationError("Each item must contain; 'lat', 'long'.")
-        
-        
-        product = Product.objects.create(**validated_data)
+                    raise serializers.ValidationError("Each file item must contain 'name', 'desc', 'date', 'url'.")
+
+        # Extract and validate 'location'
+        location_data = validated_data.pop('location', None)
+        if location_data:
+            if not all(k in location_data for k in ('lat', 'long')):
+                raise serializers.ValidationError("Location must contain 'lat' and 'long'.")
+
+        # Extract and validate 'business'
+        business_id = self.initial_data.get('business')  # 'business' is passed in initial data, not validated_data
+        if business_id:
+            try:
+                business = User.objects.get(id=business_id)  # Fetch the business using the business ID
+            except User.DoesNotExist:
+                raise serializers.ValidationError("Business with this ID does not exist.")
+        else:
+            raise serializers.ValidationError("Business ID must be provided.")
+
+        # Create the product instance
+        product = Product.objects.create(business=business, **validated_data)
+
+        # Assign 'files' and 'location' data
         product.files = files_data
-        product.location = locations_data
-        product.save()
+        product.location = location_data
+        product.save()  # Save the instance after assigning files and location
+
         return product
 
     def update(self, instance, validated_data):
-        # Handle 'files' data
+        # Extract and validate 'files'
         files_data = validated_data.pop('files', None)
-        if files_data is not None:
+        if files_data:
             for file in files_data:
-                # Ensure the item has all the required fields
                 if not all(k in file for k in ('name', 'desc', 'date', 'url')):
                     raise serializers.ValidationError("Each file item must contain 'name', 'desc', 'date', 'url'.")
-        
-        # Handle 'location' data
-        locations_data = validated_data.pop('location', None)
-        if locations_data is not None:
-            for loc in locations_data:
-                # Ensure the item has all the required fields
-                if not loc in ('lat', 'long'):
-                    raise serializers.ValidationError("Each location item must contain 'lat', 'long'.")
-        
+
+        # Extract and validate 'location'
+        location_data = validated_data.pop('location', None)
+        if location_data:
+            if not all(k in location_data for k in ('lat', 'long')):
+                raise serializers.ValidationError("Location must contain 'lat' and 'long'.")
+
         # Update instance fields
         instance.name = validated_data.get('name', instance.name)
         instance.image = validated_data.get('image', instance.image)
         instance.description = validated_data.get('description', instance.description)
         instance.price = validated_data.get('price', instance.price)
         instance.currency = validated_data.get('currency', instance.currency)
-        instance.createdat = validated_data.get('createdat', instance.createdat)
-        instance.updatedat = validated_data.get('updatedat', instance.updatedat)
-        instance.deletedat = validated_data.get('deletedat', instance.deletedat)
-        instance.deleted = validated_data.get('deleted', instance.deleted)
         instance.category = validated_data.get('category', instance.category)
-        instance.businessid = validated_data.get('businessid', instance.businessid)
         instance.address = validated_data.get('address', instance.address)
-        
-        # Save the instance
+
+        # Update 'files' and 'location' if provided
+        if files_data is not None:
+            instance.files = files_data
+        if location_data is not None:
+            instance.location = location_data
+
+        # Save the updated instance
         instance.save()
         return instance
+
 
 ###Address Serializers---------------------
 class AddressSerializer(serializers.ModelSerializer):
