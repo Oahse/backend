@@ -2,7 +2,7 @@ from dataclasses import fields
 from rest_framework import serializers
 from .utils import Util
 from datetime import datetime
-from .models import Address, User, Profession, Product, About, Quotation, Order, Category, Cart, Transaction, Message, DeliveryTracker, Job, Service,Review,Comments,DELIVERYSTATUSES
+from .models import DATE_FORMAT, DATETIME_FORMAT, Address, User, Profession, Product, About, Quotation, Order, Category, Cart, Transaction, Message, DeliveryTracker, Job, Service,Review,Comments,DELIVERYSTATUSES
 
 def authenticate(email=None, password=None, **kwargs):
     try:
@@ -200,6 +200,9 @@ class ProductSerializer(serializers.ModelSerializer):
     business = ProductBusinessSerializer(read_only=True)  # Read-only representation of the business
     files = serializers.JSONField(required=False, allow_null=True)
     location = serializers.JSONField(required=False, allow_null=True)
+    createdat = serializers.DateTimeField(format=DATETIME_FORMAT, input_formats=[DATETIME_FORMAT])
+    updatedat = serializers.DateTimeField(format=DATETIME_FORMAT, input_formats=[DATETIME_FORMAT])
+    deletedat = serializers.DateTimeField(format=DATETIME_FORMAT, input_formats=[DATETIME_FORMAT], required=False, allow_null=True)
 
     class Meta:
         model = Product

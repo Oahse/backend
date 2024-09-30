@@ -6,6 +6,9 @@ from django.dispatch import receiver
 from django.contrib.auth.models import AbstractBaseUser, PermissionsMixin, BaseUserManager 
 from .utils import Util
 
+DATE_FORMAT = '%Y-%m-%d'
+DATETIME_FORMAT = DATE_FORMAT + ' %H:%M:%S'
+MAX_LENGTH = 2555
 CURRENCIES = [("USD","USD"),("EUR","EUR"),("NGN","NGN"),("GBP","GBP"),
            ("PHP","PHP"),("KES","KES"),("TZS","TZS"),("UGX","UGX"),("RWF","RWF"),("BIF","BIF"),
            ]
@@ -326,9 +329,9 @@ class Product(models.Model):
     price = models.DecimalField(max_digits=7, decimal_places=2, null=True, blank=True)
     currency = models.CharField(choices=CURRENCIES,max_length=200, null=True, blank=True)
     files = models.JSONField(null=True, blank=True)#{name, desc, date, url}
-    createdat = models.CharField(max_length=200, null=True, blank=True)
-    updatedat = models.CharField(max_length=200, null=True, blank=True)
-    deletedat = models.CharField(max_length=200, null=True, blank=True)
+    createdat = models.DateTimeField()
+    updatedat = models.DateTimeField()
+    deletedat = models.DateTimeField(null=True, blank=True)
     deleted = models.BooleanField(default=False)
     category = models.ForeignKey(Category, on_delete=models.SET_NULL, null=True)
     business = models.ForeignKey(User, on_delete=models.SET_NULL, null=True)

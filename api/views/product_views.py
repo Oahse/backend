@@ -71,11 +71,11 @@ class ProductViewSet(viewsets.ModelViewSet):
 
     def filter_products(self, request, queryset):
         # Get parameters from the request body
-        search_query = request.data.get('search', None)
-        price_range = request.data.get('price_range', None)  # Expecting 'min,max'
-        category_id = request.data.get('category', None)
-        start_date = request.data.get('start_date', None)
-        end_date = request.data.get('end_date', None)
+        search_query = request.query_params.get('search', None)
+        price_range = request.query_params.get('price_range', None)  # Expecting 'min,max'
+        category_id = request.query_params.get('category', None)
+        start_date = request.query_params.get('start_date', None)
+        end_date = request.query_params.get('end_date', None)
 
         queryset = Product.objects.all()
 
@@ -118,34 +118,14 @@ class ProductViewSet(viewsets.ModelViewSet):
         return queryset
 
     def list(self, request, *args, **kwargs):
-        queryset = self.filter_queryset(self.get_queryset())
+        queryset = self.filter_products(request, self.get_queryset())
         
-        # Grouping products by category
-        grouped_data = defaultdict(list)
-
-        for product in self.filter_products(request, queryset):
-            category_name = product.category.name if product.category else "Uncategorized"
-            grouped_data[category_name].append(product)
-
-        # Transform the data into the desired output format
-        response_data = []
-
-        for category, items in grouped_data.items():
-            # Collect all unique hashtags for this category
-            hashtags = set()
-            for item in items:
-                hashtags.update(item.hashtags)
-
-            # Append the data in the desired format
-            response_data.append({
-                'category': category,
-                'sections': list(hashtags),  # Convert set of hashtags to a list
-                'items': [ProductSerializer(item).data for item in items]
-            })
+        serializer = ProductSerializer(queryset, many=True)
 
         # Return the response
         return Response({
             'success': True,
             'message': 'Products retrieved successfully',
-            'data': response_data
+            'data': serializer.data
         })
+        
