@@ -19,5 +19,18 @@ urlpatterns = [
     path('login/', LoginViewSet.as_view({'post': 'login'}), name='login'),
     path('logout/', LoginViewSet.as_view({'post': 'logout'}), name='logout'),
     path('verify-email/<uidb64>/<token>/', VerifyEmailView.as_view(), name='verify-email'),
-    path('password-reset/', ResetPasswordRequestView.as_view(), name='password-reset-request')
+    path('password-reset/', ResetPasswordRequestView.as_view(), name='password-reset-request'), 
+
+    # User APIs here
+
+    # path('profile/', ),
+    # path('profile/update/', name='user-profile-update'),
+    # path('profile/delete/', name='user-profile-delete' ),
+
+    # # Admin Apis begin here 
+
+    # path('', name='users-list'),
+    # path('<str:pk>/', name='user'),
+    # path('update/', name='user-update'),
+    # path('delete/', name='user-delete'),
 ]
