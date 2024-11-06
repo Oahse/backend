@@ -32,7 +32,7 @@ SECRET_KEY = os.getenv('SECRET_KEY', 'your-default-secret-key')
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['https://oahse.com','oahse.com','http://localhost:3000', '127.0.0.1', '[::1]','https://backend-irag.onrender.com','backend-irag.onrender.com']
+ALLOWED_HOSTS = ['https://oahse.com','oahse.com','http://localhost:3000', 'localhost', '127.0.0.1', '[::1]','https://backend-irag.onrender.com','backend-irag.onrender.com']
 
 
 # Application definition
