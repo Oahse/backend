@@ -39,6 +39,11 @@ ALLOWED_HOSTS = ['https://oahse.com','oahse.com','http://localhost:3000', 'local
 
 # Application definition
 INSTALLED_APPS = [
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
+    'allauth.socialaccount.providers.google',  # Google provider
+
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
@@ -52,6 +57,7 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    "allauth.account.middleware.AccountMiddleware",
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'whitenoise.middleware.WhiteNoiseMiddleware', 
@@ -63,6 +69,10 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
     'django.middleware.common.BrokenLinkEmailsMiddleware',
 ]
+AUTHENTICATION_BACKENDS = (
+    'allauth.account.auth_backends.AuthenticationBackend',
+)
+
 
 ROOT_URLCONF = 'core.urls'
 
@@ -165,6 +175,39 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 
 CORS_ALLOW_ALL_ORIGINS = True
+
+SITE_ID = 1
+# Step 4: Set the Site ID
+# Set the SITE_ID in settings.py (required by django-allauth):
+# SITE_ID = 1
+# Step 5: Configure Google OAuth2 in Google Developer Console
+# You need to create OAuth 2.0 credentials in the Google Developer Console:
+# Go to the Google Developer Console.
+# Create a new project if you don’t have one already.
+# Navigate to APIs & Services > Credentials.
+# Create credentials by selecting OAuth 2.0 Client IDs.
+# Configure the OAuth consent screen.
+# Under Authorized JavaScript origins, add the URL where your Django app will run, e.g., http://localhost:8000.
+# Under Authorized redirect URIs, add the following redirect URI for django-allauth:
+# http://localhost:8000/accounts/google/login/callback/
+# Once you've created the credentials, note down the Client ID and Client Secret.
+# SOCIAL_AUTH_GOOGLE_OAUTH2_KEY = 'your-client-id.apps.googleusercontent.com'  # Replace with your Google Client ID
+# SOCIAL_AUTH_GOOGLE_OAUTH2_SECRET = 'your-client-secret'  # Replace with your Google Client Secret
+
+# Optional: Google OAuth2 settings
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'SCOPE': [
+            'email',
+            'profile',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'offline',
+        },
+        'OAUTH_PKCE_ENABLED': True,  # Use PKCE for better security
+    }
+}
+
 
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
 EMAIL_USE_TLS = True

@@ -20,6 +20,8 @@ urlpatterns = [
     path('logout/', LoginViewSet.as_view({'post': 'logout'}), name='logout'),
     path('verify-email/<uidb64>/<token>/', VerifyEmailView.as_view(), name='verify-email'),
     path('password-reset/', ResetPasswordRequestView.as_view(), name='password-reset-request'), 
+    # Other URLs...
+    path('socialauth/', include('allauth.urls')),  # Add this line
 
     # User APIs here
 
