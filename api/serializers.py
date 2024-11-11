@@ -2,7 +2,7 @@ from dataclasses import fields
 from rest_framework import serializers
 from .utils import Util
 from datetime import datetime
-from .models import DATE_FORMAT, DATETIME_FORMAT, Address, User, Profession, Product, About, Quotation, Order, Category, Cart, Transaction, Message, DeliveryTracker, Job, Service,Review,Comments,DELIVERYSTATUSES
+from .models import DATE_FORMAT, DATETIME_FORMAT, Address, User, Profession, Product, About, Quotation, Order, Category, Cart, Transaction, Message, DeliveryTracker, Job, Service,Review,Comments,DELIVERYSTATUSES, CartItem
 
 def authenticate(email=None, password=None, **kwargs):
     try:
@@ -420,7 +420,11 @@ class CartSerializer(serializers.ModelSerializer):
         instance.save()
         return instance
 
-
+class CartItemSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CartItem
+        fields = ['id', 'cart', 'product', 'createdat', 'updatedat']
+        
 class TransactionSerializer(serializers.ModelSerializer):
     last_login_location = serializers.JSONField()
 

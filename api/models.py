@@ -384,7 +384,6 @@ class DeliveryTracker(models.Model):
     def __str__(self):
         return self.currentstat
     
-
 class Transaction(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     reason = models.CharField(max_length=200, null=True, blank=True)
@@ -415,7 +414,7 @@ class Transaction(models.Model):
 
 class Cart(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
-    userid = models.CharField(max_length=200, null=True, blank=True)
+    userid = models.ForeignKey(User, on_delete=models.CASCADE, related_name='items')
     products= models.JSONField(null=True, blank=True)#{productid, name, image, qty, price, description}
     total = models.DecimalField(
         max_digits=1000000000, decimal_places=2, null=True, blank=True)
@@ -429,6 +428,15 @@ class Cart(models.Model):
     address = models.CharField(max_length=200, null=True, blank=True)
     ipaddress= models.CharField(max_length=200, null=True, blank=True)
 
+class CartItem(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    cart = models.ForeignKey(Cart, on_delete=models.CASCADE, related_name='items')
+    product = models.ForeignKey(Product, on_delete=models.CASCADE)
+    createdat = models.CharField(max_length=200, null=True, blank=True)
+    updatedat = models.CharField(max_length=200, null=True, blank=True)
+
+    def __str__(self):
+        return f"{self.product} in cart {self.cart}"
 class About(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     company_name = models.CharField(max_length=200)
