@@ -135,7 +135,7 @@ class User(AbstractBaseUser, PermissionsMixin):
     is_deliverer = models.BooleanField(default=False)
     deliverername = models.CharField(max_length=200, null=True, blank=False)
 
-    date_joined = models.CharField(max_length=200, null=True, blank=True)
+    createdAt = models.CharField(max_length=200, null=True, blank=True)
     updatedAt = models.CharField(max_length=200, null=True, blank=False )
     last_login = models.DateTimeField(auto_now=True)
     last_login_location = models.JSONField(null=True, blank=True)
@@ -170,7 +170,53 @@ class User(AbstractBaseUser, PermissionsMixin):
     
     def verify_password(self,provided_password):
         return Util.verify_password(self.password,provided_password)
-        
+
+class ClientUser(User):
+    is_client = models.BooleanField(default=True)   
+    
+class Region(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=200, null=True, blank=True)
+
+class Country(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=200, null=True, blank=True)
+    flag = models.CharField(max_length=200, null=True, blank=True)
+    region = models.CharField(max_length=200, null=True, blank=True)
+    
+    class Meta:
+        verbose_name = 'Country'
+        verbose_name_plural = 'Countries'  
+
+
+class Company(models.Model):
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    name = models.CharField(max_length=200, null=True, blank=True)
+    cac = models.CharField(max_length=200, null=True, blank=True)
+    websiteurl = models.CharField(max_length=200, null=True, blank=True)
+    country = models.ForeignKey(Country, on_delete=models.SET_NULL, null=True)
+    state = models.CharField(max_length=200, null=True, blank=True)
+    taxid = models.CharField(max_length=200, null=True, blank=True)
+    email = models.EmailField(null=True, blank=True)
+
+    def is_verified(self):
+        if not self.name:
+            return False
+        if not self.name:
+            return False
+        if not self.websiteurl:
+            return False
+            ...
+        return True
+
+    class Meta:
+        verbose_name = 'Company'
+        verbose_name_plural = 'Companies'  
+
+class SupplierUser(User):
+    is_supplier = models.BooleanField(default=True)     
+    company = models.ForeignKey(Company, on_delete=models.SET_NULL, null=True)
+
 ## Address models-----------------------------------------------------------------------------------------
 class Address(models.Model):
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
