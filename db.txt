@@ -1,0 +1,10 @@
+db 1 relationsal db(postgresql)
+--orders, payments, users
+
+db2 nosql (elastics search) frequent reads
+product catalogs, reviews, usersessions
+
+sqlalchemy
+fastapi
+
+microservices(user service and order service, |||product service)
