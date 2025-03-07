@@ -4,5 +4,5 @@ from src.controllers.websocket import router as websocket_router
 
 app = FastAPI()
 
-app.include_router(user_router)
+register_routers(app)
 app.include_router(websocket_router)
