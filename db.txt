@@ -1,10 +1,23 @@
 db 1 relationsal db(postgresql)
---orders, payments, users
+--orders, payments, users, usersessions
 
 db2 nosql (elastics search) frequent reads
-product catalogs, reviews, usersessions
+product catalogs, reviews
 
 sqlalchemy
 fastapi
 
 microservices(user service and order service, |||product service)
+delete mode 100644 src/controllers/router/orders_controller.py
+ delete mode 100644 src/controllers/router/payments_controller.py
+
+ delete mode 100644 src/controllers/router/products_controller.py
+ delete mode 100644 src/controllers/router/reviews_controller.py
+
+ delete mode 100644 src/controllers/router/supplier_orders_controller.py
+ delete mode 100644 src/controllers/router/supplier_products_controller.py
+ delete mode 100644 src/controllers/router/supplier_sales_controller.py
+ delete mode 100644 src/controllers/router/suppliers_controller.py
+ delete mode 100644 src/controllers/router/user_controller.py
+ delete mode 100644 src/controllers/router/user_sessions_controller.py
+ delete mode 100644 src/controllers/router/wishlist_controller.py
