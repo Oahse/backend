@@ -21,6 +21,7 @@ else:
 
 # Enum for user roles (used in the schema)
 class UserRole(str, Enum):
+    Guest = 'Guest'
     Buyer = "Buyer"
     Seller = "Seller"
     Admin = "Admin"

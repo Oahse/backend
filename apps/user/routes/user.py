@@ -68,7 +68,6 @@ async def delete_user_by_id(user_id: UUID, db: AsyncSession = Depends(get_db1)):
 # Filter users by dynamic criteria
 @router.post("/users/filter")
 async def filter_users_by_criteria(filters: dict,  db: AsyncSession = Depends(get_db1)):
-    
     try:
         users = await filter_users(db, filters)
         
@@ -205,9 +204,11 @@ async def refresh_user_access_token(user_auth: UserAuth, db: AsyncSession = Depe
         
         if not correctpassword:
             return Response(message='password is incorrect',success=False,code=400)
-
-        user_deactivated = await user_refresh_token(db, user, False)
-        return Response(message="User Deactivated Successfully",data=user_deactivated,code=200)
+        
+        new_user_token = await user_refresh_token(db, user)
+        if not new_user_token:
+            return Response(message='You need to login',success=False,code=401)
+        return Response(message="New Access Token Gotten Successfully",data=new_user_token,code=200)
 
     except Exception as error:
         return Response(message=str(error),success=False,code=500)

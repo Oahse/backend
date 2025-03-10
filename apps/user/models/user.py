@@ -55,6 +55,7 @@ class Address(Base):
     
 # Enum for user roles (make sure it's a valid Enum class)
 class UserRole(PyEnum):
+    Guest = 'Guest'
     Buyer = "Buyer"
     Seller = "Seller"
     Admin = "Admin"
@@ -138,3 +139,35 @@ class User(Base):
         return f"User(id={self.id!r}, firstname={self.firstname!r}, lastname={self.lastname!r}, role={self.role!r})"
     
     
+# API Key Model
+class APIKey(Base):
+    __tablename__ = "api_key"
+
+    # Use UUID type with default to auto-generate UUID
+    id: Mapped[mappeditem] = mapped_column(UUIDType, primary_key=True, default=default)  # UUID with auto-generation
+
+    # Unique API key value
+    api_key: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
+
+    # User association (Foreign Key to the user table)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("user.id"), nullable=False)  # ForeignKey referencing user (UUID)
+
+    # The roles associated with the API key (e.g., Buyer, Admin, etc.)
+    role: Mapped[UserRole] = mapped_column(Enum(UserRole), nullable=False)  # User role as Enum
+    
+    # Expiration date for the API key
+    expires_at: Mapped[datetime] = mapped_column(DateTime,  nullable=False)
+
+    # Timestamp for when the API key was created
+    created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)
+
+    # Relationships with user (one-to-many or one-to-one depending on your use case)
+    user = relationship("User", back_populates="api_key")
+
+    def __repr__(self):
+        return f"<APIKey(id={self.id}, user_id={self.user_id}, api_key={self.api_key}, expires_at={self.expires_at})>"
+
+    # Method to check if the API key is expired
+    def is_expired(self) -> bool:
+        return datetime.utcnow() > self.expires_at
+        

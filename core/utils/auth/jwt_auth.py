@@ -1,4 +1,5 @@
 import jwt
+from jwt.exceptions import PyJWTError  as JWTError  # If you're using PyJWT
 from datetime import datetime, timedelta
 
 class JWTManager:
@@ -33,7 +34,7 @@ class JWTManager:
             return payload
         except jwt.ExpiredSignatureError:
             raise Exception("Token has expired")
-        except jwt.JWTError:
+        except JWTError:
             raise Exception("Invalid token")
 
     # Refresh the access token using the refresh token
@@ -48,40 +49,40 @@ class JWTManager:
         
         except jwt.ExpiredSignatureError:
             raise Exception("Refresh token has expired")
-        except jwt.JWTError:
+        except JWTError:
             raise Exception("Invalid refresh token")
 
 
 # Example usage
-if __name__ == "__main__":
-    jwt_manager = JWTManager(secret_key="your_secret_key")
+# if __name__ == "__main__":
+#     jwt_manager = JWTManager(secret_key="your_secret_key")
 
-    data = {"sub": "user@example.com"}  # User's identifier, usually email or user ID
+#     data = {"sub": "user@example.com"}  # User's identifier, usually email or user ID
 
-    # Create access token and refresh token
-    access_token = jwt_manager.create_access_token(data)
-    refresh_token = jwt_manager.create_refresh_token(data)
+#     # Create access token and refresh token
+#     access_token = jwt_manager.create_access_token(data)
+#     refresh_token = jwt_manager.create_refresh_token(data)
 
-    print("Generated Access Token:", access_token)
-    print("Generated Refresh Token:", refresh_token)
+#     print("Generated Access Token:", access_token)
+#     print("Generated Refresh Token:", refresh_token)
 
-    # Verifying the access token
-    try:
-        decoded_data = jwt_manager.verify_token(access_token)
-        print("Decoded Access Token Data:", decoded_data)
-    except Exception as e:
-        print(str(e))
+#     # Verifying the access token
+#     try:
+#         decoded_data = jwt_manager.verify_token(access_token)
+#         print("Decoded Access Token Data:", decoded_data)
+#     except Exception as e:
+#         print(str(e))
 
-    # Verifying the refresh token
-    try:
-        decoded_refresh_data = jwt_manager.verify_token(refresh_token)
-        print("Decoded Refresh Token Data:", decoded_refresh_data)
-    except Exception as e:
-        print(str(e))
+#     # Verifying the refresh token
+#     try:
+#         decoded_refresh_data = jwt_manager.verify_token(refresh_token)
+#         print("Decoded Refresh Token Data:", decoded_refresh_data)
+#     except Exception as e:
+#         print(str(e))
 
-    # Refreshing the access token using the refresh token
-    try:
-        new_access_token = jwt_manager.refresh_access_token(refresh_token)
-        print("New Access Token:", new_access_token)
-    except Exception as e:
-        print(str(e))
+#     # Refreshing the access token using the refresh token
+#     try:
+#         new_access_token = jwt_manager.refresh_access_token(refresh_token)
+#         print("New Access Token:", new_access_token)
+#     except Exception as e:
+#         print(str(e))

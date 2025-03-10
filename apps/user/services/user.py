@@ -207,18 +207,28 @@ async def user_activate(db: AsyncSession, user: UserUpdate, active:bool = True):
 
     return user_
 
-async def user_refresh_token(db: AsyncSession, user: UserUpdate, active:bool = True):
+async def user_refresh_token(db: AsyncSession, user: UserUpdate):
 
     # verify the refresh token
     # if invalid return invalid you need to login
     # if valid generate a new access token usng the refresh token
-    user.active = active
-    
-    await db.commit()
-    await db.refresh(user)
-    user_ = user.to_dict()
-    print(user_)
-    user_.pop("access_token", None)  # Remove access_token if it exists
-    user_.pop("refresh_token", None)  # Remove refresh_token if it exists
+    u=user.to_dict()
+    u.pop("access_token", None)  # Remove access_token if it exists
+    u.pop("refresh_token", None)  # Remove refresh_token if it exists
+    jwt_manager = JWTManager(secret_key=user.password)
 
-    return user_
+    try:
+        decoded_refresh_data = jwt_manager.verify_token(user.refresh_token)
+        # print("Decoded Refresh Token Data:", decoded_refresh_data)
+        await db.commit()
+        await db.refresh(user)
+        
+        user.access_token = jwt_manager.create_access_token(u)
+
+        return user.to_dict()
+        
+    except Exception as e:
+        # auth is needed
+        return False
+    
+    
