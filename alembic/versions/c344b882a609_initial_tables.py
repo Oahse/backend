@@ -1,8 +1,8 @@
 """Initial tables
 
-Revision ID: 4371d24b17ea
-Revises: 21e619172774
-Create Date: 2025-03-09 06:03:53.336775
+Revision ID: c344b882a609
+Revises: 
+Create Date: 2025-03-09 21:29:46.286873
 
 """
 from typing import Sequence, Union
@@ -12,8 +12,8 @@ import sqlalchemy as sa
 
 
 # revision identifiers, used by Alembic.
-revision: str = '4371d24b17ea'
-down_revision: Union[str, None] = '21e619172774'
+revision: str = 'c344b882a609'
+down_revision: Union[str, None] = None
 branch_labels: Union[str, Sequence[str], None] = None
 depends_on: Union[str, Sequence[str], None] = None
 
@@ -27,14 +27,17 @@ def upgrade() -> None:
     sa.Column('lastname', sa.String(length=255), nullable=False),
     sa.Column('password', sa.String(length=255), nullable=False),
     sa.Column('email', sa.String(length=255), nullable=False),
-    sa.Column('role', sa.Enum('Buyer', 'Seller', 'Admin', name='userrole'), nullable=False),
+    sa.Column('role', sa.Enum('Buyer', 'Seller', 'Admin', 'GodAdmin', 'SuperAdmin', 'Moderator', 'Support', 'Manager', name='userrole'), nullable=False),
     sa.Column('created_at', sa.DateTime(), nullable=False),
     sa.Column('updated_at', sa.DateTime(), nullable=False),
     sa.Column('totalorders', sa.Integer(), nullable=False),
+    sa.Column('active', sa.Boolean(), nullable=False),
     sa.Column('phone_number', sa.String(length=255), nullable=True),
     sa.Column('phone_number_pre', sa.String(length=255), nullable=True),
     sa.Column('tags', sa.String(length=255), nullable=True),
     sa.Column('notes', sa.String(length=255), nullable=True),
+    sa.Column('access_token', sa.String(length=255), nullable=False),
+    sa.Column('refresh_token', sa.String(length=255), nullable=False),
     sa.PrimaryKeyConstraint('id')
     )
     op.create_index(op.f('ix_user_email'), 'user', ['email'], unique=True)

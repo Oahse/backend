@@ -1,6 +1,7 @@
-from sqlalchemy.orm import mapped_column, Mapped, relationship
-from sqlalchemy import Enum, Integer, String, DateTime, UUID, ForeignKey
+from sqlalchemy.orm import mapped_column, Mapped, relationship, validates
+from sqlalchemy import Enum, Integer, String, DateTime, UUID, ForeignKey, Boolean
 from core.database import Base, CHAR_LENGTH
+from core.utils.encryption import PasswordManager
 from uuid import uuid4  # to generate unique UUIDs
 from datetime import datetime
 from enum import Enum as PyEnum
@@ -47,18 +48,21 @@ class Address(Base):
     created_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow)  # Optional timestamp
     updated_at: Mapped[datetime] = mapped_column(DateTime, default=datetime.utcnow, onupdate=datetime.utcnow)  # Auto update timestamp
 
+    
     def __repr__(self):
         return f"Address(id={self.id!r}, kind={self.kind!r}, email_address={self.email_address!r})"
 
     
-
-
 # Enum for user roles (make sure it's a valid Enum class)
 class UserRole(PyEnum):
     Buyer = "Buyer"
     Seller = "Seller"
     Admin = "Admin"
-
+    GodAdmin = "GodAdmin"
+    SuperAdmin = "SuperAdmin"
+    Moderator = "Moderator"
+    Support = "Support"
+    Manager = "Manager"
 
 
 class User(Base):
@@ -82,6 +86,7 @@ class User(Base):
     
     # Additional fields
     totalorders: Mapped[int] = mapped_column(Integer, default=0)  # Total orders as integer
+    active: Mapped[bool] = mapped_column(Boolean, default=False)
     phone_number: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=True)  # Phone number as string (nullable)
     phone_number_pre: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=True)  # Phone number prefix (nullable)
     tags: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=True)  # Tags as string (nullable)
@@ -90,9 +95,44 @@ class User(Base):
     # Relationship with Address model
     addresses: Mapped[List["Address"]] = relationship("Address", back_populates="user", cascade="all, delete-orphan")
 
+    access_token: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=False)
+    refresh_token: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=False)
+
     @property
     def full_name(self):
         return f"{self.firstname} {self.lastname}"
+
+    @validates("role")
+    def validate_role(self, key, role):
+        # Validate role to ensure it's one of the defined UserRoles
+        if role not in UserRole.__members__:
+            raise ValueError(f"Invalid role: {role}")
+        return role
+
+    def verify_password(self, password):
+        password_manager = PasswordManager()
+        is_correct = password_manager.verify_password(password, hashed_password = self.password)
+        return is_correct
+
+    def to_dict(self):
+        return {
+            "id": str(self.id),
+            "firstname": self.firstname,
+            "lastname": self.lastname,
+            "email": self.email,
+            "role": self.role.value,
+            "active": self.active,
+            "created_at": self.created_at.isoformat(),
+            "updated_at": self.updated_at.isoformat(),
+            "totalorders": self.totalorders,
+            "phone_number": self.phone_number,
+            "phone_number_pre": self.phone_number_pre,
+            "tags": self.tags,
+            "notes": self.notes,
+            'addresses':self.addresses,
+            "access_token": self.access_token,
+            "refresh_token": self.refresh_token
+        }
 
     def __repr__(self) -> str:
         return f"User(id={self.id!r}, firstname={self.firstname!r}, lastname={self.lastname!r}, role={self.role!r})"

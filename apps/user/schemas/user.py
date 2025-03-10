@@ -24,6 +24,11 @@ class UserRole(str, Enum):
     Buyer = "Buyer"
     Seller = "Seller"
     Admin = "Admin"
+    GodAdmin = "GodAdmin"
+    SuperAdmin = "SuperAdmin"
+    Moderator = "Moderator"
+    Support = "Support"
+    Manager = "Manager"
 
 # Pydantic schema for User View (includes relationships and additional fields)
 class UserBase(BaseModel):
@@ -31,16 +36,17 @@ class UserBase(BaseModel):
     lastname: str
     email: str
     role: UserRole
-    created_at: datetime
-    updated_at: datetime
-    totalorders: int
+    totalorders: Optional[int] = None
     phone_number: Optional[str] = None
     phone_number_pre: Optional[str] = None
     tags: Optional[str] = None
     notes: Optional[str] = None
+    access_token: Optional[str] = None
+    refresh_token: Optional[str] = None
 
     class Config:
         from_attributes = True # Allows interaction with SQLAlchemy models
+
 # Pydantic schema for creating a User
 class UserCreate(UserBase):
     password: str
@@ -54,11 +60,25 @@ class UserUpdate(UserBase):
 # Pydantic schema for User View with related addresses
 class UserView(UserBase):
     id: UUIDType  # Using UUID as the proper type for the user ID
-    
+    active: bool
     addresses: List["AddressView"] = []  # List of AddressView schema instances
-    
 
+class UserActive(BaseModel):
+    email: str
     
+class UserAuth(UserActive):
+    password: str
 
+class UserChangePassword(UserActive):
+    oldpassword: str
+    newpassword: str
+
+
+
+# Token data that will be sent to the user
+class Token(BaseModel):
+    access_token: str
+    token_type: str
+    
 # Update forward references for Pydantic
 UserView.update_forward_refs()
