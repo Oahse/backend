@@ -18,36 +18,42 @@ else:
     mappeditem = str
     default = lambda: str(uuid4())
 
-# Enum for Address types: Billing or Shipping
-class AddressType(str, Enum):
-    Billing = "Billing"
-    Shipping = "Shipping"
+# Enum for user roles (make sure it's a valid Enum class)
+class UserRole(str, Enum):
+    Guest = 'Guest'
+    Buyer = "Buyer"
+    Seller = "Seller"
+    Admin = "Admin"
+    GodAdmin = "GodAdmin"
+    SuperAdmin = "SuperAdmin"
+    Moderator = "Moderator"
+    Support = "Support"
+    Manager = "Manager"
 
 # Pydantic schema for Address base (used in create, update, and view)
-class AddressBase(BaseModel):
-    email_address: Optional[str] = None
-    street: Optional[str] = None
-    city: Optional[str] = None
-    state: Optional[str] = None
-    country: Optional[str] = None
-    post_code: Optional[str] = None
-    kind: AddressType  # Enum for AddressType (Billing or Shipping)
+class ApiKeyBase(BaseModel):
+    api_key: str
+    user_id: UUID
+    role: UserRole  # Enum for UserRole 
 
     class Config:
         from_attributes = True
 
-class AddressCreate(AddressBase):
+class ApiKeyCreate(ApiKeyBase):
     """ Schema for creating a new address. """
     pass
 
-class AddressUpdate(AddressBase):
+class ApiKeyUpdate(BaseModel):
     """ Schema for updating an existing address. """
-    pass
+    role: UserRole  # Enum for UserRole 
 
-class AddressView(AddressBase):
+    class Config:
+        from_attributes = True
+
+class ApiKeyView(ApiKeyBase):
     id: UUIDType
+    expires_at: str
     created_at: str
-    updated_at: str
 
 
 
