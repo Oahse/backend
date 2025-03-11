@@ -1,5 +1,5 @@
 from sqlalchemy.orm import mapped_column, Mapped, relationship, validates
-from sqlalchemy import Enum, Integer, String, DateTime, UUID, ForeignKey, Boolean
+from sqlalchemy import Enum, Integer, String, DateTime, ForeignKey, Boolean
 from core.database import Base, CHAR_LENGTH
 from core.utils.encryption import PasswordManager
 from uuid import uuid4  # to generate unique UUIDs
@@ -140,7 +140,7 @@ class User(Base):
     
     
 # API Key Model
-class APIKey(Base):
+class ApiKey(Base):
     __tablename__ = "api_key"
 
     # Use UUID type with default to auto-generate UUID
@@ -170,4 +170,20 @@ class APIKey(Base):
     # Method to check if the API key is expired
     def is_expired(self) -> bool:
         return datetime.utcnow() > self.expires_at
-        
+
+    @validates("role")
+    def validate_role(self, key, role):
+        # Validate role to ensure it's one of the defined UserRoles
+        if role not in UserRole.__members__:
+            raise ValueError(f"Invalid role: {role}")
+        return role
+
+    def to_dict(self):
+        return {
+            "id": str(self.id),
+            "api_key": self.api_key,
+            "user_id": self.user_id,
+            "role": self.role.value,
+            "expires_at": self.expires_at.isoformat(),
+            "created_at": self.created_at.isoformat(),
+        }

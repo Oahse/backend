@@ -3,10 +3,24 @@ import base64
 import json
 from datetime import datetime, timedelta
 from typing import List
+from uuid import UUID
+import sys
 
+# Database type detection
+if 'postgresql' in sys.argv:
+    # Use native UUID for PostgreSQL
+    UUIDType = UUID(as_uuid=True)
+    mappeditem = UUID
+    default = uuid4
+else:
+    # Use string representation for other databases
+    UUIDType = str
+    mappeditem = str
+    default = lambda: str(uuid4())
+    
 class APIKeyGenerator:
     @staticmethod
-    def generate_api_key(user_id: str, roles: List[str], expires_in: timedelta = timedelta(hours=1)) -> str:
+    def generate_api_key(user_id: mappeditem, role: str, expires_in: timedelta = timedelta(hours=1)) -> str:
         """
         Generates an API key using user ID, roles, and expiration date.
         :param user_id: The unique identifier of the user
@@ -16,12 +30,11 @@ class APIKeyGenerator:
         """
         
         # Combine user details and expiration info
-        expiration_timestamp = (datetime.utcnow() + expires_in).timestamp()
         api_key_data = {
             'user_id': user_id,
-            'roles': roles,
-            'exp': expiration_timestamp,
-            'timestamp': datetime.utcnow().timestamp()
+            'role': role,
+            'expires_at': (datetime.utcnow() + expires_in).timestamp(),
+            'created_at': datetime.utcnow().timestamp()
         }
 
         # Convert the data to a string
@@ -36,7 +49,7 @@ class APIKeyGenerator:
         return api_key_base64
 
     @staticmethod
-    def verify_api_key(api_key: str, user_id: str, db_roles: List[str]) -> bool:
+    def verify_api_key(api_key: str, user_id: str, role: str) -> bool:
         """
         Verifies if the provided API key is valid and matches the user info.
         :param api_key: The API key string
@@ -55,11 +68,11 @@ class APIKeyGenerator:
             if api_key_data['user_id'] != user_id:
                 return False
             
-            if any(role not in db_roles for role in api_key_data['roles']):
+            if role == api_key_data['role']:
                 return False
             
             # Check if the key is expired
-            if api_key_data['exp'] < datetime.utcnow().timestamp():
+            if api_key_data['expires_at'] < datetime.utcnow().timestamp():
                 return False
             
             return True
@@ -76,7 +89,7 @@ class APIKeyGenerator:
 
 # api_key_to_verify = "the_api_key_received_in_the_request"
 # user_id = "user123"
-# db_roles = ["admin", "user"]  # The roles you retrieve from the database for the user
+# role = "Admin"  # The roles you retrieve from the database for the user
 
 # is_valid = APIKeyGenerator.verify_api_key(api_key_to_verify, user_id, db_roles)
 # if is_valid:
