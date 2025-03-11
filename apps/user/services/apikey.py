@@ -53,7 +53,7 @@ async def get_apikey(db: AsyncSession, apikey_id: UUID):
     uid = str(apikey_id) if UUIDType is str else apikey_id
     
     try:
-        result = await db.execute(select(ApiKey).filter(ApiKey.id == uid).options(selectinload(ApiKey.addresses)))
+        result = await db.execute(select(ApiKey).filter(ApiKey.id == uid))
         apikey = result.scalars().first()
         if not apikey:
             return Response(message="ApiKey not found",success=False,code=404)
@@ -64,7 +64,9 @@ async def get_apikey(db: AsyncSession, apikey_id: UUID):
 
 # Create a new user (asynchronous)
 async def create_apikey(db: AsyncSession, apikey: ApiKeyCreate):
-    apikeygen = APIKeyGenerator()
+    expires_in = timedelta(hours=1)
+
+    apikeygen = APIKeyGenerator.generate_api_key(apikey.user_id, apikey.role, expires_in)
     
     # Set the expiration time
     expires_at = datetime.utcnow() + expiration
@@ -72,7 +74,7 @@ async def create_apikey(db: AsyncSession, apikey: ApiKeyCreate):
     # Create the API key record
 
     db_apikey = ApiKey(
-        api_key=apikey.firstname,
+        api_key=apikeygen,
         user_id=apikey.user_id,
         role=apikey.role,
         expires_at=apikey.expires_at
@@ -124,7 +126,6 @@ async def filter_apikeys(db: AsyncSession, filters: dict):
     # Get all users as a list of dictionaries
     res=result.scalars().all()
     apikeys = []
-    print(res)
     # Remove sensitive keys from each user's dictionary
     for apikey in res:
         apikey_dict = apikey.to_dict()
