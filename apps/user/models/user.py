@@ -9,6 +9,7 @@ from typing import List, Optional
 from uuid import UUID
 import sys
 
+
 # Database type detection
 if 'postgresql' in sys.argv:
     # Use native UUID for PostgreSQL
@@ -27,14 +28,14 @@ class AddressType(PyEnum):
     Shipping = "Shipping"
 
 class Address(Base):
-    __tablename__ = "address"
+    __tablename__ = "addresses"
 
     # Define the fields
     # Use UUID type with default to auto-generate UUID
     id: Mapped[mappeditem] = mapped_column(UUIDType, primary_key=True, default=default)  # UUID with auto-generation
     
     email_address: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=True)  # Optional email field
-    user_id: Mapped[UUID] = mapped_column(ForeignKey("user.id"), nullable=False)  # ForeignKey referencing user (UUID)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)  # ForeignKey referencing user (UUID)
     user: Mapped["User"] = relationship("User", back_populates="addresses")  # Relationship with User model
     
     street: Mapped[str] = mapped_column(String(CHAR_LENGTH), nullable=True)  # Optional street
@@ -67,7 +68,7 @@ class UserRole(PyEnum):
 
 
 class User(Base):
-    __tablename__ = "user"
+    __tablename__ = "users"
     
     # Use UUID type with default to auto-generate UUID
     id: Mapped[mappeditem] = mapped_column(UUIDType, primary_key=True, default=default)  # UUID with auto-generation
@@ -141,7 +142,7 @@ class User(Base):
     
 # API Key Model
 class ApiKey(Base):
-    __tablename__ = "api_key"
+    __tablename__ = "api_keys"
 
     # Use UUID type with default to auto-generate UUID
     id: Mapped[mappeditem] = mapped_column(UUIDType, primary_key=True, default=default)  # UUID with auto-generation
@@ -150,7 +151,7 @@ class ApiKey(Base):
     api_key: Mapped[str] = mapped_column(String, unique=True, index=True, nullable=False)
 
     # User association (Foreign Key to the user table)
-    user_id: Mapped[UUID] = mapped_column(ForeignKey("user.id"), nullable=False)  # ForeignKey referencing user (UUID)
+    user_id: Mapped[UUID] = mapped_column(ForeignKey("users.id"), nullable=False)  # ForeignKey referencing user (UUID)
 
     # The roles associated with the API key (e.g., Buyer, Admin, etc.)
     role: Mapped[UserRole] = mapped_column(Enum(UserRole), nullable=False)  # User role as Enum

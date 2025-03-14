@@ -17,7 +17,7 @@ else:
     UUIDType = str
     mappeditem = str
     default = lambda: str(uuid4())
-    
+
 class APIKeyGenerator:
     @staticmethod
     def generate_api_key(user_id: mappeditem, role: str, expires_in: timedelta = timedelta(hours=1)) -> str:
@@ -81,10 +81,10 @@ class APIKeyGenerator:
             return False
 
 # user_id = "user123"
-# roles = ["admin", "user"]
+# role = "admin"
 # expires_in = timedelta(hours=1)
 
-# api_key = APIKeyGenerator.generate_api_key(user_id, roles, expires_in)
+# api_key = APIKeyGenerator.generate_api_key(user_id, role, expires_in)
 # print("Generated API Key:", api_key)
 
 # api_key_to_verify = "the_api_key_received_in_the_request"

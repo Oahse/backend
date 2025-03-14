@@ -2,7 +2,7 @@ from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.future import select
 from sqlalchemy.orm import Session, selectinload
 from apps.user.models.user import User, UUID
-from apps.user.schemas.user import UserCreate, UserUpdate, UserView, UserAuth,UserChangePassword
+from apps.user.schemas.user import UserCreate, UserUpdate, UserView, UserAuth,UserChangePassword, SellerCreate, BuyerCreate, GuestCreate, GodAdminCreate, ManagerCreate, ModeratorCreate, AdminCreate ,SuperAdminCreate,SupportCreate
 from uuid import UUID
 from fastapi import HTTPException
 from core.utils.auth.jwt_auth import JWTManager
@@ -35,34 +35,24 @@ else:
     
 # Get all users (asynchronous)
 async def get_users(db: AsyncSession):
-    try:
-        result = await db.execute(select(User).options(selectinload(User.addresses)))
-        # Get all users as a list of dictionaries
-        users = []
-        
-        # Remove sensitive keys from each user's dictionary
-        for user in result.scalars().all():
-            user_ = user.to_dict()
-            user_.pop("access_token", None)  # Remove access_token if it exists
-            user_.pop("refresh_token", None)  # Remove refresh_token if it exists
+    result = await db.execute(select(User).options(selectinload(User.addresses)))
+    # Get all users as a list of dictionaries
+    users = []
+    
+    # Remove sensitive keys from each user's dictionary
+    for user in result.scalars().all():
+        user_ = user.to_dict()
+        user_.pop("access_token", None)  # Remove access_token if it exists
+        user_.pop("refresh_token", None)  # Remove refresh_token if it exists
 
-            users.append(user_)
-        return Response(data=users,code=200)
-    except Exception as error:
-        return Response(message=str(error),success=False,code=500)
+        users.append(user_)
+    return users
 
 # Get a single user by ID (asynchronous)
 async def get_user(db: AsyncSession, user_id: UUID):
     uid = str(user_id) if UUIDType is str else user_id
-    
-    try:
-        result = await db.execute(select(User).filter(User.id == uid).options(selectinload(User.addresses)))
-        user = result.scalars().first()
-        if not user:
-            return Response(message="User not found",success=False,code=404)
-        return Response(data=user.to_dict(),code=200)
-    except Exception as error:
-        return Response(message=str(error), success=False, code=500)
+    result = await db.execute(select(User).filter(User.id == uid).options(selectinload(User.addresses)))
+    return result.scalars().first()
     
 
 # Create a new user (asynchronous)
@@ -71,15 +61,20 @@ async def create_user(db: AsyncSession, user: UserCreate):
 
     # Hash the password
     hashed_password = password_manager.hash_password(user.password)
+    
+    # Assuming JWTManager has a way to generate tokens
     jwt_manager = JWTManager(secret_key=hashed_password)
+    
+    # Convert user to json (if needed for JWT generation)
     jsonuser = json.loads(user.json())
 
+    # Set role dynamically
     db_user = User(
         firstname=user.firstname,
         lastname=user.lastname,
         password=hashed_password,
         email=user.email,
-        role=user.role,
+        role=user.role,  # Set the role dynamically
         phone_number=user.phone_number,
         phone_number_pre=user.phone_number_pre,
         active=False,
@@ -88,10 +83,58 @@ async def create_user(db: AsyncSession, user: UserCreate):
         access_token=jwt_manager.create_access_token(jsonuser),
         refresh_token=jwt_manager.create_refresh_token(jsonuser)
     )
+    
     db.add(db_user)
-    await db.commit()  # Use await here for async commit
-    await db.refresh(db_user)  # Use await to refresh the instance
+    await db.commit()  # Commit the transaction asynchronously
+    await db.refresh(db_user)  # Refresh to get updated info (e.g., ID after commit)
+    
     return db_user
+
+# Create a Seller
+async def create_seller(db: AsyncSession, user: SellerCreate):
+    user.role = UserRole.Seller  # Explicitly set role to Seller
+    return await create_user(db, user)  # Delegate to the general create_user function
+
+# Create a Buyer
+async def create_buyer(db: AsyncSession, user: BuyerCreate):
+    user.role = UserRole.Buyer  # Explicitly set role to Buyer
+    return await create_user(db, user)  # Delegate to the general create_user function
+
+# Create an Admin
+async def create_admin(db: AsyncSession, user: AdminCreate):
+    user.role = UserRole.Admin  # Explicitly set role to Admin
+    return await create_user(db, user)  # Delegate to the general create_user function
+
+# Create a God Admin
+async def create_godadmin(db: AsyncSession, user: GodAdminCreate):
+    user.role = UserRole.GodAdmin  # Explicitly set role to GodAdmin
+    return await create_user(db, user)  # Delegate to the general create_user function
+
+# Create a Super Admin
+async def create_superadmin(db: AsyncSession, user: SuperAdminCreate):
+    user.role = UserRole.SuperAdmin  # Explicitly set role to SuperAdmin
+    return await create_user(db, user)  # Delegate to the general create_user function
+
+# Create a Moderator
+async def create_moderator(db: AsyncSession, user: ModeratorCreate):
+    user.role = UserRole.Moderator  # Explicitly set role to Moderator
+    return await create_user(db, user)  # Delegate to the general create_user function
+
+# Create a Support
+async def create_support(db: AsyncSession, user: SupportCreate):
+    user.role = UserRole.Support  # Explicitly set role to Support
+    return await create_user(db, user)  # Delegate to the general create_user function
+
+# Create a Manager
+async def create_manager(db: AsyncSession, user: ManagerCreate):
+    user.role = UserRole.Manager  # Explicitly set role to Manager
+    return await create_user(db, user)  # Delegate to the general create_user function
+
+# Create a Guest
+async def create_guest(db: AsyncSession, user: GuestCreate):
+    user.role = UserRole.Guest  # Explicitly set role to Guest
+    return await create_user(db, user)  # Delegate to the general create_user function
+
 
 # Update an existing user (asynchronous)
 async def update_user(db: AsyncSession, user_update: UserUpdate, user_id: UUID):
@@ -155,7 +198,6 @@ async def filter_users(db: AsyncSession, filters: dict):
     # Get all users as a list of dictionaries
     res=result.scalars().all()
     users = []
-    print(res)
     # Remove sensitive keys from each user's dictionary
     for user in res:
         user_dict = user.to_dict()  # Assuming you have a method to convert to dict
@@ -198,7 +240,6 @@ async def user_change_password(db: AsyncSession, user: UserUpdate,newpassword: s
 
 async def user_activate(db: AsyncSession, user: UserUpdate, active:bool = True):
     user.active = active
-    
     await db.commit()
     await db.refresh(user)
     user_ = user.to_dict()

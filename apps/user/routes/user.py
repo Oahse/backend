@@ -4,10 +4,9 @@ from sqlalchemy.orm import Session, selectinload
 from typing import Dict
 from sqlalchemy.ext.asyncio import AsyncSession
 from core.utils.reponse import Response
-
 from core.database import get_db1
-from apps.user.schemas.user import UserView, UserCreate,UserUpdate,UserAuth,UserChangePassword,UserActive
-from apps.user.services.user import get_users, create_user, get_user, delete_user, filter_users, update_user, login_user, user_change_password,user_activate,user_refresh_token, UUID, User
+from apps.user.schemas.user import UserView, UserCreate,UserUpdate,UserAuth,UserChangePassword,UserActive,SellerCreate, BuyerCreate, GuestCreate, GodAdminCreate, ManagerCreate, ModeratorCreate, AdminCreate ,SuperAdminCreate,SupportCreate
+from apps.user.services.user import get_users, create_user,create_seller,create_buyer,create_admin,create_godadmin,create_superadmin,create_moderator,create_support,create_manager,create_guest, get_user, delete_user, filter_users, update_user, login_user, user_change_password,user_activate,user_refresh_token, UUID, User
 import json
 
 router = APIRouter()
@@ -15,31 +14,171 @@ router = APIRouter()
 # Get all users
 @router.get("/users", response_model=list[UserView])
 async def get_all_users(db: AsyncSession = Depends(get_db1)):
-    users = await get_users(db)
-    return users
+    try:
+        users = await get_users(db)
+        return Response(data=users,code=200)
+    except Exception as error:
+        return Response(message=str(error),success=False,code=500)
 
 # Get a single user by ID
 @router.get("/users/{user_id}")
 async def get_user_by_id(user_id: UUID, db: AsyncSession = Depends(get_db1)):
-    user = await get_user(db, user_id)
-    return user
+    try:
+        user = await get_user(db, user_id)
+        if not user:
+            return Response(message="User not found",success=False,code=404)
+        return Response(data=user.to_dict(),code=200)
+    except Exception as error:
+        return Response(message=str(error), success=False, code=500)
 
 # Create a new user
 @router.post("/users", response_model=UserCreate, status_code=201)
 async def create_new_user(user_create: UserCreate, db: AsyncSession = Depends(get_db1)):
-    
     try:
         result = await db.execute(select(User).filter(User.email == user_create.email))
         if len(result.scalars().all())>0:
             return Response(message=f"User with email-'{user_create.email}' Already Exists",success=False,code=400)
-
         created_user = await create_user(db, user_create)
         if created_user is None:
             return Response(message="User not Created",success=False,code=404)
         return Response(data=created_user.to_dict(),code=201)
-
     except Exception as error:
         return Response(message=str(error), success=False,code=500)
+
+# Create a Seller user
+@router.post("/users/seller", response_model=UserCreate, status_code=201)
+async def create_seller_user(user_create: SellerCreate, db: AsyncSession = Depends(get_db1)):
+    try:
+        result = await db.execute(select(User).filter(User.email == user_create.email))
+        if len(result.scalars().all()) > 0:
+            return Response(message=f"User with email-'{user_create.email}' already exists", success=False, code=400)
+        created_seller = await create_seller(db, user_create)  # Use the create_seller function for role-specific creation
+        if created_seller is None:
+            return Response(message="Seller user not created", success=False, code=404)
+        return Response(data=created_seller.to_dict(), code=201)
+    except Exception as error:
+        return Response(message=str(error), success=False, code=500)
+
+
+# Create a Buyer user
+@router.post("/users/buyer", response_model=UserCreate, status_code=201)
+async def create_buyer_user(user_create: BuyerCreate, db: AsyncSession = Depends(get_db1)):
+    try:
+        result = await db.execute(select(User).filter(User.email == user_create.email))
+        if len(result.scalars().all()) > 0:
+            return Response(message=f"User with email-'{user_create.email}' already exists", success=False, code=400)
+        created_buyer = await create_buyer(db, user_create)  # Use the create_buyer function for role-specific creation
+        if created_buyer is None:
+            return Response(message="Buyer user not created", success=False, code=404)
+        return Response(data=created_buyer.to_dict(), code=201)
+    except Exception as error:
+        return Response(message=str(error), success=False, code=500)
+
+
+# Create an Admin user
+@router.post("/users/admin", response_model=UserCreate, status_code=201)
+async def create_admin_user(user_create: AdminCreate, db: AsyncSession = Depends(get_db1)):
+    try:
+        result = await db.execute(select(User).filter(User.email == user_create.email))
+        if len(result.scalars().all()) > 0:
+            return Response(message=f"User with email-'{user_create.email}' already exists", success=False, code=400)
+        created_admin = await create_admin(db, user_create)  # Use the create_admin function for role-specific creation
+        if created_admin is None:
+            return Response(message="Admin user not created", success=False, code=404)
+        return Response(data=created_admin.to_dict(), code=201)
+    except Exception as error:
+        return Response(message=str(error), success=False, code=500)
+
+
+# Create a GodAdmin user
+@router.post("/users/godadmin", response_model=UserCreate, status_code=201)
+async def create_godadmin_user(user_create: GodAdminCreate, db: AsyncSession = Depends(get_db1)):
+    try:
+        result = await db.execute(select(User).filter(User.email == user_create.email))
+        if len(result.scalars().all()) > 0:
+            return Response(message=f"User with email-'{user_create.email}' already exists", success=False, code=400)
+        created_godadmin = await create_godadmin(db, user_create)  # Use the create_godadmin function for role-specific creation
+        if created_godadmin is None:
+            return Response(message="GodAdmin user not created", success=False, code=404)
+        return Response(data=created_godadmin.to_dict(), code=201)
+    except Exception as error:
+        return Response(message=str(error), success=False, code=500)
+
+
+# Create a SuperAdmin user
+@router.post("/users/superadmin", response_model=UserCreate, status_code=201)
+async def create_superadmin_user(user_create: SuperAdminCreate, db: AsyncSession = Depends(get_db1)):
+    try:
+        result = await db.execute(select(User).filter(User.email == user_create.email))
+        if len(result.scalars().all()) > 0:
+            return Response(message=f"User with email-'{user_create.email}' already exists", success=False, code=400)
+        created_superadmin = await create_superadmin(db, user_create)  # Use the create_superadmin function for role-specific creation
+        if created_superadmin is None:
+            return Response(message="SuperAdmin user not created", success=False, code=404)
+        return Response(data=created_superadmin.to_dict(), code=201)
+    except Exception as error:
+        return Response(message=str(error), success=False, code=500)
+
+
+# Create a Moderator user
+@router.post("/users/moderator", response_model=UserCreate, status_code=201)
+async def create_moderator_user(user_create: ModeratorCreate, db: AsyncSession = Depends(get_db1)):
+    try:
+        result = await db.execute(select(User).filter(User.email == user_create.email))
+        if len(result.scalars().all()) > 0:
+            return Response(message=f"User with email-'{user_create.email}' already exists", success=False, code=400)
+        created_moderator = await create_moderator(db, user_create)  # Use the create_moderator function for role-specific creation
+        if created_moderator is None:
+            return Response(message="Moderator user not created", success=False, code=404)
+        return Response(data=created_moderator.to_dict(), code=201)
+    except Exception as error:
+        return Response(message=str(error), success=False, code=500)
+
+
+# Create a Support user
+@router.post("/users/support", response_model=UserCreate, status_code=201)
+async def create_support_user(user_create: SupportCreate, db: AsyncSession = Depends(get_db1)):
+    try:
+        result = await db.execute(select(User).filter(User.email == user_create.email))
+        if len(result.scalars().all()) > 0:
+            return Response(message=f"User with email-'{user_create.email}' already exists", success=False, code=400)
+        created_support = await create_support(db, user_create)  # Use the create_support function for role-specific creation
+        if created_support is None:
+            return Response(message="Support user not created", success=False, code=404)
+        return Response(data=created_support.to_dict(), code=201)
+    except Exception as error:
+        return Response(message=str(error), success=False, code=500)
+
+
+# Create a Manager user
+@router.post("/users/manager", response_model=UserCreate, status_code=201)
+async def create_manager_user(user_create: ManagerCreate, db: AsyncSession = Depends(get_db1)):
+    try:
+        result = await db.execute(select(User).filter(User.email == user_create.email))
+        if len(result.scalars().all()) > 0:
+            return Response(message=f"User with email-'{user_create.email}' already exists", success=False, code=400)
+        created_manager = await create_manager(db, user_create)  # Use the create_manager function for role-specific creation
+        if created_manager is None:
+            return Response(message="Manager user not created", success=False, code=404)
+        return Response(data=created_manager.to_dict(), code=201)
+    except Exception as error:
+        return Response(message=str(error), success=False, code=500)
+
+
+# Create a Guest user
+@router.post("/users/guest", response_model=UserCreate, status_code=201)
+async def create_guest_user(user_create: GuestCreate, db: AsyncSession = Depends(get_db1)):
+    try:
+        result = await db.execute(select(User).filter(User.email == user_create.email))
+        if len(result.scalars().all()) > 0:
+            return Response(message=f"User with email-'{user_create.email}' already exists", success=False, code=400)
+        created_guest = await create_guest(db, user_create)  # Use the create_guest function for role-specific creation
+        if created_guest is None:
+            return Response(message="Guest user not created", success=False, code=404)
+        return Response(data=created_guest.to_dict(), code=201)
+    except Exception as error:
+        return Response(message=str(error), success=False, code=500)
+
 
 # Update an existing user
 @router.put("/users/{user_id}", response_model=UserView)
@@ -52,7 +191,6 @@ async def update_user_by_id(user_id: UUID, user_update: UserUpdate, db: AsyncSes
         user.pop("access_token", None)  # Remove access_token if it exists
         user.pop("refresh_token", None)  # Remove refresh_token if it exists
         return Response(data=user,message='User Updated Successfully',code=200)
-
     except Exception as error:
         return Response(message=str(error), success=False,code=500)
 
