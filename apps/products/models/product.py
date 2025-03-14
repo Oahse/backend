@@ -37,8 +37,7 @@ class Products(Base):
     
     # Price, Discount, and Final Price
     price: Mapped[Float] = mapped_column(Float, nullable=False)  # Regular price
-    discount_price: Mapped[Optional[Float]] = mapped_column(Float, nullable=True)  # Discounted price (if any)
-    final_price: Mapped[Float] = mapped_column(Float, nullable=False)  # Price after discount (calculated dynamically)
+    discount: Mapped[Optional[int]] = mapped_column(int, nullable=True)  # Discounted in %
     
     # Stock and availability
     stock_quantity: Mapped[int] = mapped_column(Integer, default=0, nullable=False)  # Quantity available in stock
@@ -87,12 +86,12 @@ class Products(Base):
     categories: Mapped[List[Category]] = relationship("Category", back_populates="product", cascade="all, delete-orphan")
     
     # Method to calculate the final price (taking into account discounts)
-    def calculate_final_price(self):
-        if self.discount_price:
-            self.final_price = self.discount_price
-        else:
-            self.final_price = self.price
-        return self.final_price
+    @property
+    def final_price(self):
+        if self.discount:
+            return self.price - (self.price*(self.discount/100))
+
+        return self.price
     
     # Method to return a detailed dictionary representation of the product
     def to_dict(self):
